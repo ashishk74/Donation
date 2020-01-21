@@ -17,7 +17,7 @@ contract Donation {
         useless_variable = _param;
     }
     
-    function donate (address _donatee) public payable {
+    function donate (address payable _donatee) public payable {
         
         donatur = msg.sender;
         money = msg.value;
