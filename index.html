@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>STAKE</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+<body style="background-color:ivory;">
+
+<div class="container-fluid">
+
+
+  <input id="connect" type="button" value="Connect to Metamask" onclick="startNow();">
+  <br><br>
+      
+  
+  <h3>STAKE MyToken</h3>
+
+  <div class="form-row">
+
+    <div class="form-group col-md-2">
+    <input  type="text" id="stake_param1" placeholder="Amount of Tokens">
+    </div>
+
+    <div class="form-group col-md-2">
+    <input  type="text" id="stake_param2" placeholder="Lock Choice 0,1,2">
+    </div>
+  	
+    <div class="form-group col-md-2">
+    <input  type="text" id="stake_param3" placeholder="Referee Address">
+    </div>
+        
+      
+	<div class="form-group col-md-2">
+    <button id="button" onclick="stakex()">CREATE STAKE</button><br>
+    </div>
+	
+	
+	<b><div id="viewstakex" ></div></b>
+	<br>
+  </div>
+
+  <h3>UnStake</h3>
+
+  <div class="form-row">
+
+    <div class="form-group col-md-2">
+    <input  type="text" id="unstake_param1" placeholder="Stake Id">
+    </div>
+
+      
+	<div class="form-group col-md-2">
+    <button id="button" onclick="unstakex()">UnStake</button><br>
+    </div>
+	
+	
+	<b><div id="viewunstakex" ></div></b>
+	<br>
+  </div>
+
+   <h3>Redeem</h3>
+
+  <div class="form-row">
+
+    <div class="form-group col-md-2">
+    <input  type="text" id="redeem_param1" placeholder="Stake Id">
+    </div>
+
+      
+	<div class="form-group col-md-2">
+    <button id="button" onclick="redeemx()">Redeeem</button><br>
+    </div>
+	
+	
+	<b><div id="viewredeemx" ></div></b>
+	<br>
+  </div>
+
+
+   <h3>Get Stake Details</h3>
+
+  <div class="form-row">
+
+    <div class="form-group col-md-2">
+    <input  type="text" id="stakeDetails_param1" placeholder="Stake Id">
+    </div>
+
+      
+	<div class="form-group col-md-2">
+    <button id="button" onclick="stakeDetailsx()">Get Stake Details</button><br>
+    </div>
+	
+	
+	<b><div id="viewstakeDetailsx" ></div></b>
+	<br>
+  </div>
+
+    <script type="text/javascript" src="./abi.js"></script>
+    <script type="text/javascript">
+
+        window.userAddress = "";
+
+        const CONTRACT_ADDRESS = "0x7e623DDc915e504aCfC65ebb9410841111F0A995";
+
+        async function startNow() {
+            if (window.ethereum) {
+                try {
+                await window.ethereum.request({ method: "eth_requestAccounts" })
+                    .then(function (address) {
+                    const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+                    myContract = new web3.eth.Contract(stakeAbi, CONTRACT_ADDRESS);
+                    window.userAddress = address[0];
+                    alert("Metamask connected sucessfully");
+                    })
+                    .catch((e) => e);
+
+                    window.ethereum.on("accountsChanged", function (accounts) {
+                        window.userAddress = address[0];
+                    });
+                    
+                } catch (error) {
+                    if (error.code === 4001) {
+                    }
+                    console.log(error);
+
+                }
+            }
+        }    
+
+        if (window.userAddress) {
+            startNow();
+        }
+        
+        async function stakex(){
+			
+            var p1 = document.getElementById('stake_param1').value;
+            var p2 = document.getElementById('stake_param2').value;
+            var p3 = document.getElementById('stake_param3').value;
+            
+            const result = await myContract.methods.createStake(p1, p2, p3)
+            .send({from:window.userAddress, gas:1000000})
+            .then(function (result) {
+            $("#viewstakex").html('Stake successful <br>From : ' + (result.events.Staked.returnValues.userAddress) 
+            + '<br> Vide Stake Id #  :    ' + (result.events.Staked.returnValues.stakeId) 
+            + '<br> of Amount: '+ (result.events.Staked.returnValues.amount));
+            console.log(result);
+            });
+		}
+
+        async function unstakex(){
+			
+            var p1 = document.getElementById('unstake_param1').value;
+            
+            const result = await myContract.methods.unStake(p1)
+            .send({from:window.userAddress, gas:1000000})
+            .then(function (result) {
+            $("#viewunstakex").html('Unstake successful <br>From : ' + (result.events.Unstaked.returnValues.userAddress) 
+            + '<br> Vide Stake Id #  :    ' + (result.events.Unstaked.returnValues.stakeId) 
+            + '<br> of Amount: '+ (result.events.Unstaked.returnValues.amount));
+            console.log(result);
+            });
+		}
+
+
+        async  function stakeDetailsx(){
+            var p1 = document.getElementById('stakeDetails_param1').value;
+            const result = await myContract.methods.getStakeDetails(p1).call()
+            .then (function (result){		
+                $("#viewstakeDetailsx").html('<b>Stake Details </b> : <br> User Address :: '+ (result[0]) + 
+                ' of Amount :: ' + (result[1]) + ' at Time :: ' +(result[2]) + '  Status ::' + (result[9]));
+                console.log(result);
+            });
+        }
+        
+    </script>
+  </body>
+</html>
+
